@@ -1146,6 +1146,10 @@ jobs:
     - test-linuxmusl-aarch64
     - test-macos-x86_64
     - test-macos-aarch64
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'All build+tests passed, ready to publish now!'
+
 
 
   publish-debian-stretch-x86_64:
