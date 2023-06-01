@@ -15821,3 +15821,333 @@ class TestDDLNonIsolated(tb.DDLTestCase):
             await self.con.execute('''
                 drop extension package varchar VERSION '1.0'
             ''')
+
+    async def _extension_test_03(self):
+        await self.con.execute('''
+            create extension vector;
+
+            create scalar type v3 extending vector::vector<3>;
+        ''')
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <str><vector>'[1, 2, 3]';
+            ''',
+            ['[1,2,3]'],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <json><vector>'[1, 2, 3]';
+            ''',
+            [[1, 2, 3]],
+            json_only=True,
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <str><vector><json>[1, 2, 3];
+            ''',
+            ['[1,2,3]'],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2, 3]' = <vector>'[0, 1, 1]';
+            ''',
+            [False],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2, 3]' != <vector>'[0, 1, 1]';
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2, 3]' ?= <vector>{};
+            ''',
+            [False],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2, 3]' ?!= <vector>{};
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>{} ?= <vector>{};
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2]' < <vector>'[2, 3]';
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2]' <= <vector>'[2, 3]';
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2]' > <vector>'[2, 3]';
+            ''',
+            [False],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[1, 2]' >= <vector>'[2, 3]';
+            ''',
+            [False],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select len(
+                    <vector>'[1.2, 3.4, 5, 6]',
+                );
+            ''',
+            [4],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select euclidean_distance(
+                    <vector>'[3, 4]',
+                    <vector>'[0, 0]',
+                );
+            ''',
+            [5],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select euclidean_norm(<vector>'[3, 4]');
+            ''',
+            [5],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select inner_product(
+                    <vector>'[1, 2]',
+                    <vector>'[3, 4]',
+                );
+            ''',
+            [11],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select cosine_distance(
+                    <vector>'[3, 0]',
+                    <vector>'[3, 4]',
+                );
+            ''',
+            [0.4],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <str>mean({
+                    <vector>'[3, 0]',
+                    <vector>'[0, 4]',
+                });
+            ''',
+            ['[1.5,2]'],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[3, 0]' in {
+                    <vector>'[1, 2]',
+                    <vector>'[3, 4]',
+                };
+            ''',
+            [False],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <vector>'[3, 0]' not in {
+                    <vector>'[1, 2]',
+                    <vector>'[3, 4]',
+                };
+            ''',
+            [True],
+        )
+
+        await self.assert_query_result(
+            '''
+                select vector::len(<v3>'[11, 3, 4]');
+            ''',
+            [3],
+        )
+
+        await self.con.execute('''
+            create type L2 {
+                create property val -> v3;
+                create index vector::ivfflat_euclidean(lists := 100) on (.val);
+            }
+        ''')
+
+        await self.con.execute('''
+            create type IP {
+                create property val -> v3;
+                create index vector::ivfflat_ip(lists := 100) on (.val);
+            }
+        ''')
+
+        await self.con.execute('''
+            create type Cosine {
+                create property val -> v3;
+                create index vector::ivfflat_cosine(lists := 100) on (.val);
+            }
+        ''')
+
+    async def test_edgeql_ddl_extensions_03(self):
+        # XXX: This will eventually go into a file in `ext` directory.
+
+        await self.con.execute('''
+            create extension package vector version '1.0' {
+                set ext_module := "vector";
+                set sql_extensions := ["vector"];
+
+                create module vector;
+
+                create scalar type vector::vector extending std::anyscalar {
+                    set sql_type := "vector";
+                    set sql_type_scheme := "vector({__arg_0__})";
+                    set num_params := 1;
+                };
+
+                create cast from vector::vector to std::str {
+                    set volatility := 'Immutable';
+                    using sql cast;
+                };
+
+                create cast from std::str to vector::vector {
+                    set volatility := 'Immutable';
+                    using sql cast;
+                };
+
+                create cast from vector::vector to std::json {
+                    set volatility := 'Immutable';
+                    using sql 'SELECT val::text::jsonb';
+                };
+
+                create cast from std::json to vector::vector {
+                    set volatility := 'Immutable';
+                    using sql $$
+                    SELECT (
+                        CASE WHEN nullif(val, 'null'::jsonb) IS NULL THEN NULL
+                        ELSE
+                            (SELECT COALESCE(array_agg(j), ARRAY[]::jsonb[])
+                            FROM jsonb_array_elements(val) as j)
+                        END
+                    )::float[]::vector
+                    $$;
+                };
+
+                create function vector::euclidean_distance(
+                    a: vector::vector,
+                    b: vector::vector,
+                ) -> std::float64 {
+                    using sql 'SELECT a <-> b';
+                };
+
+                create function vector::inner_product(
+                    a: vector::vector,
+                    b: vector::vector,
+                ) -> std::float64 {
+                    using sql 'SELECT -(a <#> b)';
+                };
+
+                create function vector::cosine_distance(
+                    a: vector::vector,
+                    b: vector::vector,
+                ) -> std::float64 {
+                    using sql 'SELECT a <=> b';
+                };
+
+                create function vector::len(a: vector::vector) -> std::int64 {
+                    using sql function 'vector_dims';
+                    set force_return_cast := true;
+                };
+
+                create function vector::euclidean_norm(
+                    a: vector::vector
+                ) -> std::float64 {
+                    using sql function 'vector_norm';
+                    set force_return_cast := true;
+                };
+
+                create function vector::mean(
+                    a: set of vector::vector
+                ) -> vector::vector {
+                    using sql function 'avg';
+                    set force_return_cast := true;
+                };
+
+                create abstract index vector::ivfflat_euclidean(
+                    named only lists: int64
+                ) {
+                    create annotation std::description :=
+                        'IVFFlat index for euclidean distance.';
+                };
+
+                create abstract index vector::ivfflat_ip(
+                    named only lists: int64
+                ) {
+                    create annotation std::description :=
+                        'IVFFlat index for inner product.';
+                };
+
+                create abstract index vector::ivfflat_cosine(
+                    named only lists: int64
+                ) {
+                    create annotation std::description :=
+                        'IVFFlat index for cosine distance.';
+                };
+            };
+        ''')
+        try:
+            async with self._run_and_rollback():
+                await self._extension_test_03()
+        finally:
+            await self.con.execute('''
+                drop extension package vector version '1.0'
+            ''')
