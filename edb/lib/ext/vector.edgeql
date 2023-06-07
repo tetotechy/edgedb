@@ -129,6 +129,8 @@ create extension package vector version '1.0' {
     ) {
         create annotation std::description :=
             'IVFFlat index for euclidean distance.';
+        set code :=
+            'ivfflat (__col__ vector_l2_ops) WITH (lists = __kw_lists__)';
     };
 
     create abstract index vector::ivfflat_ip(
@@ -136,6 +138,8 @@ create extension package vector version '1.0' {
     ) {
         create annotation std::description :=
             'IVFFlat index for inner product.';
+        set code :=
+            'ivfflat (__col__ vector_ip_ops) WITH (lists = __kw_lists__)';
     };
 
     create abstract index vector::ivfflat_cosine(
@@ -143,5 +147,7 @@ create extension package vector version '1.0' {
     ) {
         create annotation std::description :=
             'IVFFlat index for cosine distance.';
+        set code :=
+            'ivfflat (__col__ vector_cosine_ops) WITH (lists = __kw_lists__)';
     };
 };
