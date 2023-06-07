@@ -110,6 +110,20 @@ create extension package vector version '1.0' {
         set force_return_cast := true;
     };
 
+    create function set_probes(num: std::int64) -> std::int64 {
+	using sql $$
+            select num from (
+	        select set_config('ivfflat.probes', num::text, true)
+            ) as dummy;
+	$$;
+    };
+
+    create function _get_probes() -> optional std::int64 {
+        using sql $$
+          select nullif(current_setting('ivfflat.probes'), '')::int8
+        $$;
+    };
+
     create abstract index vector::ivfflat_euclidean(
         named only lists: int64
     ) {
