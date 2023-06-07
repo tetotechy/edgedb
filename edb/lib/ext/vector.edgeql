@@ -24,9 +24,10 @@ create extension package vector version '1.0' {
     create module vector;
 
     create scalar type vector::vector extending std::anyscalar {
+        set id := <uuid>"9565dd88-04f5-11ee-a691-0b6ebe179825";
         set sql_type := "vector";
         set sql_type_scheme := "vector({__arg_0__})";
-        set params := ["int64"];
+        set num_params := 1;
     };
 
     create cast from vector::vector to std::str {
@@ -61,6 +62,9 @@ create extension package vector version '1.0' {
         a: vector::vector,
         b: vector::vector,
     ) -> std::float64 {
+        set volatility := 'Immutable';
+        # Needed to pick up the indexes when used in ORDER BY.
+        set prefer_subquery_args := true;
         using sql 'SELECT a <-> b';
     };
 
@@ -68,6 +72,9 @@ create extension package vector version '1.0' {
         a: vector::vector,
         b: vector::vector,
     ) -> std::float64 {
+        set volatility := 'Immutable';
+        # Needed to pick up the indexes when used in ORDER BY.
+        set prefer_subquery_args := true;
         using sql 'SELECT -(a <#> b)';
     };
 
@@ -75,11 +82,15 @@ create extension package vector version '1.0' {
         a: vector::vector,
         b: vector::vector,
     ) -> std::float64 {
+        set volatility := 'Immutable';
+        # Needed to pick up the indexes when used in ORDER BY.
+        set prefer_subquery_args := true;
         using sql 'SELECT a <=> b';
     };
 
     create function vector::len(a: vector::vector) -> std::int64 {
         using sql function 'vector_dims';
+        set volatility := 'Immutable';
         set force_return_cast := true;
     };
 
@@ -87,6 +98,7 @@ create extension package vector version '1.0' {
         a: vector::vector
     ) -> std::float64 {
         using sql function 'vector_norm';
+        set volatility := 'Immutable';
         set force_return_cast := true;
     };
 
@@ -94,6 +106,7 @@ create extension package vector version '1.0' {
         a: set of vector::vector
     ) -> vector::vector {
         using sql function 'avg';
+        set volatility := 'Immutable';
         set force_return_cast := true;
     };
 
