@@ -90,6 +90,7 @@ class Extension(
 
     package = so.SchemaField(
         ExtensionPackage,
+        compcoef=0.0,
     )
 
 
