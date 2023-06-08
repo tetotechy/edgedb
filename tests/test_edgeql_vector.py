@@ -16,11 +16,7 @@
 # limitations under the License.
 #
 
-import decimal
 import os
-import re
-import textwrap
-import uuid
 
 import edgedb
 
@@ -33,7 +29,11 @@ class RollBack(Exception):
 
 
 class TestEdgeQLVector(tb.QueryTestCase):
-    # FIXME: the SDL schema is not working
+    EXTENSIONS = ['vector']
+
+    SCHEMA = os.path.join(os.path.dirname(__file__), 'schemas',
+                          'vector.esdl')
+
     SETUP = os.path.join(os.path.dirname(__file__), 'schemas',
                          'vector_setup.edgeql')
 
@@ -277,7 +277,7 @@ class TestEdgeQLVector(tb.QueryTestCase):
             [[1, 2, 3]],
         )
 
-    async def test_edgeql_vector_cast_06(self):
+    async def test_edgeql_vector_cast_07(self):
         await self.assert_query_result(
             '''
                 select <array<float32>><v3>[11, 3, 4];
@@ -285,7 +285,7 @@ class TestEdgeQLVector(tb.QueryTestCase):
             [[11, 3, 4]],
         )
 
-    async def test_edgeql_vector_cast_07(self):
+    async def test_edgeql_vector_cast_08(self):
         # Casts from arrays of derived types.
         await self.assert_query_result(
             '''
@@ -319,7 +319,7 @@ class TestEdgeQLVector(tb.QueryTestCase):
             [[1, 2.3, 4.5]],
         )
 
-    async def test_edgeql_vector_cast_05(self):
+    async def test_edgeql_vector_cast_09(self):
         # Casts from arrays of derived types.
         res = [0, 3, 4.25, 6.75]
         await self.assert_query_result(
@@ -343,7 +343,7 @@ class TestEdgeQLVector(tb.QueryTestCase):
         )
 
     @test.xfail('vectors appear as JSON strings when nested')
-    async def test_edgeql_vector_cast_06(self):
+    async def test_edgeql_vector_cast_10(self):
         # Arrays of vectors.
         await self.assert_query_result(
             '''
@@ -358,7 +358,7 @@ class TestEdgeQLVector(tb.QueryTestCase):
             json_only=True,
         )
 
-    async def test_edgeql_vector_cast_07(self):
+    async def test_edgeql_vector_cast_11(self):
         # Vectors in tuples.
         await self.assert_query_result(
             '''
