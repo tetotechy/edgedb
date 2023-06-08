@@ -15857,6 +15857,129 @@ class TestDDLNonIsolated(tb.DDLTestCase):
         await self.assert_query_result(
             '''
                 with module vector
+                select <array<float32>><vector>'[1.5, 2, 3]';
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<int16>>[1, 2, 3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<int32>>[1, 2, 3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<int64>>[1.0, 2.0, 3.0];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<float32>>[1.5, 2, 3];
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<float64>>[1, 2, 3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<decimal>>[1.5, 2, 3];
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector><array<bigint>>[1, 2, 3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>[1, 2, 3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>
+                    [<int16>1, <int16>2, <int16>3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>
+                    [<int32>1, <int32>2, <int32>3];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>[1.5, 2, 3];
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>
+                    [<float32>1.5, <float32>2, <float32>3];
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>[1.5n, 2n, 3n];
+            ''',
+            [[1.5, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
+                select <array<float32>><vector>[1n, 2n, 3n];
+            ''',
+            [[1, 2, 3]],
+        )
+
+        await self.assert_query_result(
+            '''
+                with module vector
                 select <vector>'[1, 2, 3]' = <vector>'[0, 1, 1]';
             ''',
             [False],
@@ -16012,9 +16135,16 @@ class TestDDLNonIsolated(tb.DDLTestCase):
 
         await self.assert_query_result(
             '''
-                select vector::len(<v3>'[11, 3, 4]');
+                select vector::len(<v3>[11, 3, 4]);
             ''',
             [3],
+        )
+
+        await self.assert_query_result(
+            '''
+                select <array<float32>><v3>[11, 3, 4];
+            ''',
+            [[11, 3, 4]],
         )
 
         await self.con.execute('''
@@ -16036,6 +16166,10 @@ class TestDDLNonIsolated(tb.DDLTestCase):
                 create property val -> v3;
                 create index vector::ivfflat_cosine(lists := 100) on (.val);
             }
+        ''')
+
+        await self.con.execute('''
+            insert L2 {val := [1, 2, 3.5]};
         ''')
 
     # To enable a rapid test cycle, load the vector

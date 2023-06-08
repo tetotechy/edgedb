@@ -58,6 +58,60 @@ create extension package vector version '1.0' {
         $$;
     };
 
+    # All casts from numerical arrays should allow assignment casts.
+    create cast from array<std::float32> to vector::vector {
+        set volatility := 'Immutable';
+        using sql cast;
+        allow assignment;
+    };
+
+    create cast from array<std::float64> to vector::vector {
+        set volatility := 'Immutable';
+        using sql cast;
+        allow assignment;
+    };
+
+    create cast from array<std::int16> to vector::vector {
+        set volatility := 'Immutable';
+        using sql $$
+        SELECT val::float4[]::vector
+        $$;
+        allow assignment;
+    };
+
+    create cast from array<std::int32> to vector::vector {
+        set volatility := 'Immutable';
+        using sql cast;
+        allow assignment;
+    };
+
+    create cast from array<std::int64> to vector::vector {
+        set volatility := 'Immutable';
+        using sql $$
+        SELECT val::float4[]::vector
+        $$;
+        allow assignment;
+    };
+
+    create cast from array<std::decimal> to vector::vector {
+        set volatility := 'Immutable';
+        using sql cast;
+        allow assignment;
+    };
+
+    create cast from array<std::bigint> to vector::vector {
+        set volatility := 'Immutable';
+        using sql $$
+        SELECT val::numeric[]::vector
+        $$;
+        allow assignment;
+    };
+
+    create cast from vector::vector to array<std::float32> {
+        set volatility := 'Immutable';
+        using sql cast;
+    };
+
     create function vector::euclidean_distance(
         a: vector::vector,
         b: vector::vector,
