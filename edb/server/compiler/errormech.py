@@ -122,6 +122,9 @@ range_constraints = frozenset({
     'date_t_check',
 })
 
+extension_re = re.compile(
+    r'^could not open extension control file ".*/(.+)\.control"'
+)
 
 pgtype_re = re.compile(
     '|'.join(fr'\b{key}\b' for key in types.base_type_name_map_r))
@@ -495,6 +498,22 @@ def _static_interpret_feature_not_supported(
     from_graphql: bool = False,
 ):
     return errors.UnsupportedBackendFeatureError(err_details.message)
+
+
+@static_interpret_by_code.register(pgerrors.ERROR_UNDEFINED_FILE)
+def _static_interpret_undefined_file(
+    _code: str,
+    err_details: ErrorDetails,
+    from_graphql: bool = False,
+):
+    m = extension_re.match(err_details.message)
+    if m:
+        return errors.UnsupportedBackendFeatureError(
+            f"could not create extension '{m[1]}': it is not present "
+            f"on the backend postgres installation"
+        )
+
+    return errors.InternalServerError(err_details.message)
 
 
 #########################################################################
