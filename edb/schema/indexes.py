@@ -121,7 +121,7 @@ def is_index_valid_for_type(
                 schema.get('ext::pgvector::vector', type=s_scalars.ScalarType),
             )
 
-    return False
+    return True
 
 
 class Index(

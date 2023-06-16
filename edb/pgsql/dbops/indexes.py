@@ -98,6 +98,8 @@ class Index(tables.InheritableTableObject):
         expr = expr[1:-1].replace('__col__', '{col}')
         expr = ', '.join(expr.format(col=e) for e in exprs)
 
+        expr = expr.replace('__tablename__', qn(*self.table_name))
+
         kwargs = self.metadata.get('kwargs')
         if kwargs is not None:
             # Escape the expression first

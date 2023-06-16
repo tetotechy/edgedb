@@ -7017,25 +7017,37 @@ class ExtensionCommand(MetaCommand):
     pass
 
 
-def _parse_spec(spec: str) -> tuple[str, list[tuple[str, str]]]:
+def _parse_spec(spec: str) -> tuple[str, Optional[str], list[tuple[str, str]]]:
+    pclauses: list[tuple[str, str]]
     if ' ' not in spec:
-        return (spec, [])
+        pclauses = []
+        ext = spec
+    else:
+        ext, versions = spec.split(' ', 1)
+        clauses = versions.split(',')
+        pclauses = []
+        for clause in clauses:
+            for i in range(len(clause)):
+                if clause[i].isnumeric():
+                    break
+            pclauses.append((clause[:i], clause[i:]))
 
-    ext, versions = spec.split(' ', 1)
-    clauses = versions.split(',')
-    pclauses = []
-    for clause in clauses:
-        for i in range(len(clause)):
-            if clause[i].isnumeric():
-                break
-        pclauses.append((clause[:i], clause[i:]))
+    if '/' in ext:
+        ext, schema_name = ext.split('/')
+    else:
+        schema_name = None
 
-    return ext, pclauses
+    return ext, schema_name, pclauses
 
 
 class CreateExtension(ExtensionCommand, adapts=s_exts.CreateExtension):
     def _create_extension(self, ext_spec: str) -> None:
-        ext, vclauses = _parse_spec(ext_spec)
+        ext, schema_name, vclauses = _parse_spec(ext_spec)
+
+        if schema_name:
+            self.pgops.add(
+                dbops.CreateSchema(name=schema_name, conditional=True),
+            )
 
         # Dynamically select the highest version extension that matches
         # the provided version specification.
@@ -7076,7 +7088,7 @@ class CreateExtension(ExtensionCommand, adapts=s_exts.CreateExtension):
         # XXX: hardcode to put stuff into edgedb schema
         # so that operations can be easily accessed.
         # N.B: this won't work on heroku; is that fine?
-        target_schema = 'edgedb'
+        target_schema = schema_name or 'edgedb'
 
         self.pgops.add(dbops.Query(textwrap.dedent(f"""\
             EXECUTE
@@ -7113,16 +7125,20 @@ class DeleteExtension(ExtensionCommand, adapts=s_exts.DeleteExtension):
         schema = super().apply(schema, context)
 
         for ext_spec in package.get_sql_extensions(schema):
-            ext, _ = _parse_spec(ext_spec)
+            ext, schema_name, _ = _parse_spec(ext_spec)
 
             self.pgops.add(
                 dbops.DropExtension(
                     dbops.Extension(
                         name=ext,
-                        schema=ext,
+                        schema=schema_name,
                     ),
                 )
             )
+            if schema_name:
+                self.pgops.add(
+                    dbops.DropSchema(name=schema_name),
+                )
 
         return schema
 
