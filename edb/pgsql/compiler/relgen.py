@@ -2669,6 +2669,34 @@ def process_set_as_enumerate(
     return rvars
 
 
+@_special_case('zombodb::test')
+def process_set_as_zombodb_test(
+    ir_set: irast.Set,
+    *,
+    ctx: context.CompilerContextLevel,
+) -> SetRVars:
+    expr = ir_set.expr
+    assert isinstance(expr, irast.FunctionCall)
+    stmt = ctx.rel
+
+    ir_obj = expr.args[0]
+    ir_obj_set = ir_obj.expr
+    ir_query = expr.args[1].expr
+
+    obj_rvar = get_set_rvar(ir_obj_set, ctx=ctx)
+    query_path = dispatch.compile(ir_query, ctx=ctx)
+
+    op = pgast.Expr(
+        # XXX: Need a proper way to inject/extract ctid
+        lexpr=pgast.ColumnRef(name=(obj_rvar.alias.aliasname, 'ctid')),
+        name='==>',
+        rexpr=query_path,
+    )
+    pathctx.put_path_value_var(ctx.rel, ir_set.path_id, op)
+
+    return new_stmt_set_rvar(ir_set, ctx.rel, aspects=('value',), ctx=ctx)
+
+
 @_special_case('std::max', only_as_fallback=True)
 @_special_case('std::min', only_as_fallback=True)
 def process_set_as_std_min_max(
