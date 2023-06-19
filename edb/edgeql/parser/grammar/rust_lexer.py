@@ -23,7 +23,9 @@ from typing import *
 from collections import deque
 
 from edb.edgeql import tokenizer
-from edb import _edgeql_parser as eql_parser
+
+if TYPE_CHECKING:
+    from edb import _edgeql_parser as eql_parser
 
 
 class EdgeQLLexer:
