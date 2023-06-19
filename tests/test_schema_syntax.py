@@ -36,7 +36,7 @@ class SchemaSyntaxTest(tb.BaseSyntaxTest):
 
     @classmethod
     def get_parser(cls):
-        return eql_parser.EdgeSDLParser()
+        return eql_parser.EdgeSDLParser().get_cheese()
 
 
 class TestEdgeSchemaParser(SchemaSyntaxTest):
