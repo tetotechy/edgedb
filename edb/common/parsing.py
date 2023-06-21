@@ -296,7 +296,6 @@ class ParserError(Exception):
             return None
 
 
-
 class ParserSpec:
     parser_spec: ClassVar[parsing.Spec | None]
 
@@ -365,7 +364,6 @@ class ParserSpec:
         return os.path.join(
             os.path.dirname(mod.__file__),
             mod.__name__.rpartition('.')[2] + '.' + type)
-
 
 
 def line_col_from_char_offset(source, position):
