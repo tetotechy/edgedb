@@ -33,10 +33,10 @@ from edb.common import markup
 def generate_source(
     node: pgast.Base,
     *,
-    indent_with: str=' ' * 4,
-    add_line_information: bool=False,
-    pretty: bool=True,
-    reordered: bool=False
+    indent_with: str = ' ' * 4,
+    add_line_information: bool = False,
+    pretty: bool = True,
+    reordered: bool = False,
 ) -> str:
     # Main codegen entrypoint
 
@@ -78,7 +78,7 @@ def generate_ctes_source(
 def _generate(
     node: pgast.Base,
     *,
-    opts: codegen.Options=codegen.Options(),
+    opts: codegen.Options = codegen.Options(),
     reordered: bool = False,
     with_translation_data: bool = False,
 ) -> SQLSourceGenerator:
@@ -138,8 +138,8 @@ class SQLSourceGenerator(codegen.SourceGenerator):
         self,
         opts: codegen.Options,
         *,
-        with_translation_data: bool=False,
-        reordered: bool = True
+        with_translation_data: bool = False,
+        reordered: bool = True,
     ):
         super().__init__(
             indent_with=opts.indent_with,
