@@ -57,7 +57,7 @@ from edb.pgsql import common as pgcommon
 from edb.pgsql.common import quote_ident as pg_qi
 from edb.pgsql.common import quote_literal as pg_ql
 from edb.pgsql import params as pg_params
-from edb.pgsql.codegen import SQLSourceGeneratorTranslationData
+from edb.pgsql import codegen as pg_codegen
 
 from edb.server.pgproto cimport hton
 from edb.server.pgproto cimport pgproto
@@ -2067,7 +2067,7 @@ cdef class PGConnection:
         msg_buf: WriteBuffer,
         query: bytes,
         pos_bytes: bytes,
-        translation_data: Optional[SQLSourceGeneratorTranslationData]
+        translation_data: Optional[pg_codegen.TranslationData]
     ):
         if translation_data:
             pos = int(pos_bytes.decode('utf8'))
